@@ -23,7 +23,7 @@ async def time(websocket, path):
         temperature = bmp280.get_temperature()
         pressure = bmp280.get_pressure()
 
-        await websocket.send(timestamp)
+        await websocket.send('|'.join([ timestamp, "{:.3f}".format(temperature), "{:.3f}".format(pressure) ]))
         await asyncio.sleep(1)
 
 start_server = websockets.serve(time, "192.168.0.8", 8001)

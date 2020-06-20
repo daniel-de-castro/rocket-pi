@@ -13,8 +13,8 @@ PAGE="""\
 <head>
   <meta charset="utf-8">
 
-  <title>PiX</title>
-  <link rel="icon" type="image/x-icon" href="https://www.spacex.com/sites/all/themes/spacex2012/favicon.ico">
+  <title>RocketPi</title>
+  <link rel="icon" type="image/x-icon" href="https://www.spacex.com/static/images/favicon.ico">
 
   <style>
 
@@ -38,10 +38,11 @@ PAGE="""\
     #telemetry {
       position: relative;
       height: 380px;
-      width: 285px;
+      /*width: 285px;*/
       padding: 4px;
       overflow: hidden;
-      background: rgba(255, 255, 255, .2);
+      border-radius: 1px 5px 5px 1px;
+      background: rgba(0, 0, 0, .5);
     }
     #telemetry #numericItems {
       width: 99%;
@@ -89,6 +90,120 @@ PAGE="""\
     }
 
   </style>
+  <script>
+window.onload = function () {
+
+var dataPoints1 = [];
+var dataPoints2 = [];
+var dataPoints3 = [];
+
+var chart = new CanvasJS.Chart("chartContainer", {
+	zoomEnabled: true,
+        backgroundColor: "transparent",
+        axisX:{
+                labelFontColor: "transparent"
+        },
+	axisY:{
+                labelFontColor: "#bbbbbb",
+		includeZero: false
+	},
+	toolTip: {
+		shared: true
+	},
+	legend: {
+		cursor:"pointer",
+		verticalAlign: "top",
+		fontSize: 11,
+		fontColor: "#bbbbbb",
+		itemclick : toggleDataSeries
+	},
+	data: [{
+		type: "line",
+		xValueType: "dateTime",
+		yValueFormatString: "####.00",
+		xValueFormatString: "",
+		showInLegend: true,
+		name: "Pitch",
+		dataPoints: dataPoints1
+		},
+		{
+			type: "line",
+			xValueType: "dateTime",
+			yValueFormatString: "####.00",
+			showInLegend: true,
+			name: "Yaw" ,
+			dataPoints: dataPoints2
+	        },
+                {
+                       type: "line",
+                       xValueType: "dateTime",
+                       yValueFormatString: "####.00",
+                       showInLegend: true,
+                       name: "Roll",
+                       dataPoints: dataPoints3
+              }]
+});
+
+function toggleDataSeries(e) {
+	if (typeof(e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
+		e.dataSeries.visible = false;
+	}
+	else {
+		e.dataSeries.visible = true;
+	}
+	chart.render();
+}
+
+var maxDisplayPoints = 60; // updates every second, so will show the last minute
+var updateInterval = 1000; // ms
+// initial value
+var yValue1 = 1;
+var yValue2 = 0;
+var yValue3 = -1;
+
+var time = new Date;
+// starting at 9.30 am
+time.setHours(9);
+time.setMinutes(30);
+time.setSeconds(00);
+time.setMilliseconds(00);
+
+function updateChart(count, accel) {
+        count = count || 5;
+
+        time.setTime(time.getTime() + updateInterval);
+
+	yValue1 = 1;
+	yValue2 = 0;
+        yValue3 = -1;
+
+	// pushing the new values
+	dataPoints1.push({
+		x: time.getTime(),
+		y: yValue1
+	});
+	dataPoints2.push({
+		x: time.getTime(),
+		y: yValue2
+	});
+        dataPoints3.push({
+                x: time.getTime(),
+                y: yValue3
+	});
+
+        if (dataPoints1.length > maxDisplayPoints) {
+            dataPoints1.shift();
+            dataPoints2.shift();
+            dataPoints3.shift();
+        }
+
+	chart.render();
+}
+
+setInterval(function(){updateChart(5, "accel")}, updateInterval);
+
+}
+</script>
 </head>
 
 <body>
@@ -98,13 +213,13 @@ PAGE="""\
       <ul id="numericItems">
         <li id="timeDisplay"></li>
         <li>Altitude: </li>
-        <li>Pressure: </li>
-        <li>Temperature: </li>
+        <li id="temperatureDisplay"></li>
+        <li id="pressureDisplay"></li>
       </ul>
       <ul id="visualItems">
         <li>
           <p>Accelerometer</p>
-          <div></div>
+          <div id="chartContainer" style="height: 160px; width: 100%; border-radius: 5px; margin-top: 10px;"></div>
         </li>
         <li>
           <p>Gyroscope</p>
@@ -117,11 +232,19 @@ PAGE="""\
   <script>
     var ws = new WebSocket("ws://192.168.0.8:8001/");
     ws.onmessage = function (event) {
-      var timeDisplay = document.getElementById('timeDisplay'),
-          timeData = document.createTextNode(event.data);
-      timeDisplay.innerHTML = timeData.textContent.concat(" UTC");
+      var timeData = document.createTextNode(event.data).textContent.split('|')[0] + " UTC",
+          timeDisplay = document.getElementById('timeDisplay'),
+          temperatureData = document.createTextNode(event.data).textContent.split('|')[1] + " C",
+          temperatureDisplay = document.getElementById('temperatureDisplay'),
+          pressureData = document.createTextNode(event.data).textContent.split('|')[2] + " hPa",
+          pressureDisplay = document.getElementById('pressureDisplay');
+      timeDisplay.innerHTML = timeData;
+      temperatureDisplay.innerHTML = "Temperature: " + temperatureData;
+      pressureDisplay.innerHTML = "Pressure: " + pressureData;
     };
   </script>
+
+<script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
 </body>
 </html>
 """
