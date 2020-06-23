@@ -90,8 +90,36 @@ PAGE="""\
 		}
 
 	</style>
+</head>
+
+<body>
+	<div>
+		<div id="telemetry">
+			<ul id="numericItems">
+				<li id="timeDisplay"></li>
+				<li id="altitudeDisplay"></li>
+				<li id="temperatureDisplay"></li>
+				<li id="pressureDisplay"></li>
+			</ul>
+			<ul id="visualItems">
+				<li>
+					<p>Accelerometer</p>
+					<div id="accelChartContainer" style="height: 160px; width: 100%; border-radius: 5px; margin-top: 10px;"></div>
+				</li>
+				<li>
+					<p>Gyroscope</p>
+					<div id="gyroChartContainer" style="height: 160px; width: 100%; border-radius: 5px; margin-top: 10px;"></div>
+				</li>
+			</ul>
+		</div>
+	</div>
 
 	<script>
+
+	var accel = [];
+	var gyro = [];
+	var mag = [];
+
 	window.onload = function () {
 
 		var accelX = [];
@@ -116,7 +144,7 @@ PAGE="""\
 				verticalAlign: "top",
 				fontSize: 11,
 				fontColor: "#bbbbbb",
-				itemclick : toggleDataSeries
+				itemclick : toggleAccelProperty
 			},
 			data: [
 				{
@@ -125,7 +153,7 @@ PAGE="""\
 					yValueFormatString: "####.00",
 					xValueFormatString: "",
 					showInLegend: true,
-					name: "Pitch",
+					name: "X",
 					dataPoints: accelX
 				},
 				{
@@ -133,7 +161,7 @@ PAGE="""\
 					xValueType: "dateTime",
 					yValueFormatString: "####.00",
 					showInLegend: true,
-					name: "Yaw" ,
+					name: "Y" ,
 					dataPoints: accelY
 				},
 				{
@@ -141,13 +169,13 @@ PAGE="""\
 					xValueType: "dateTime",
 					yValueFormatString: "####.00",
 					showInLegend: true,
-					name: "Roll",
+					name: "Z",
 					dataPoints: accelZ
 				}
 			]
 		});
 
-		function toggleDataSeries(e) {
+		function toggleAccelProperty(e) {
 			if (typeof(e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
 				e.dataSeries.visible = false;
 			}
@@ -158,13 +186,81 @@ PAGE="""\
 			accelChart.render();
 		}
 
+		var gyroX = [];
+		var gyroY = [];
+		var gyroZ = [];
+
+		var gyroChart = new CanvasJS.Chart("gyroChartContainer", {
+			zoomEnabled: true,
+			backgroundColor: "transparent",
+			axisX:{
+				labelFontColor: "transparent"
+			},
+			axisY:{
+				labelFontColor: "#bbbbbb",
+				includeZero: false
+			},
+			toolTip: {
+				shared: true
+			},
+			legend: {
+				cursor:"pointer",
+				verticalAlign: "top",
+				fontSize: 11,
+				fontColor: "#bbbbbb",
+				itemclick : toggleGyroProperty
+			},
+			data: [
+				{
+					type: "line",
+					xValueType: "dateTime",
+					yValueFormatString: "####.00",
+					xValueFormatString: "",
+					showInLegend: true,
+					name: "X",
+					dataPoints: gyroX
+				},
+				{
+					type: "line",
+					xValueType: "dateTime",
+					yValueFormatString: "####.00",
+					showInLegend: true,
+					name: "Y" ,
+					dataPoints: gyroY
+				},
+				{
+					type: "line",
+					xValueType: "dateTime",
+					yValueFormatString: "####.00",
+					showInLegend: true,
+					name: "Z",
+					dataPoints: gyroZ
+				}
+			]
+		});
+
+		function toggleGyroProperty(e) {
+			if (typeof(e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
+				e.dataSeries.visible = false;
+			}
+			else {
+				e.dataSeries.visible = true;
+			}
+		
+			gyroChart.render();
+		}
+
 		var maxDisplayPoints = 60; // updates every second, so will show the last minute
 		var updateInterval = 1000; // ms
 
 		// Initial values
-		var accelXval = 1;
+		var accelXval = 0;
 		var accelYval = 0;
-		var accelZval = -1;
+		var accelZval = 0;
+
+		var gyroXval = 0;
+		var gyroYval = 0;
+		var gyroZval = 0;
 
 		// Start at 9:30am
 		var time = new Date;
@@ -173,13 +269,13 @@ PAGE="""\
 		time.setSeconds(00);
 		time.setMilliseconds(00);
 
-		function updateChart(count, accel) {
+		function updateChart(count) {
 			count = count || 5;
 			time.setTime(time.getTime() + updateInterval);
 
-			accelXval = 1;
-			accelYval = 0;
-			accelZval = -1;
+			accelXval = parseFloat(accel[0]);
+			accelYval = parseFloat(accel[1]);
+			accelZval = parseFloat(accel[2]);
 
 			// Push the updated values
 			accelX.push({
@@ -201,51 +297,57 @@ PAGE="""\
 				accelZ.shift();
 			}
 
+			gyroXval = parseFloat(gyro[0]);
+			gyroYval = parseFloat(gyro[1]);
+			gyroZval = parseFloat(gyro[2]);
+
+			gyroX.push({
+				x: time.getTime(),
+				y: gyroXval
+			});
+			gyroY.push({
+				x: time.getTime(),
+				y: gyroYval
+			});
+			gyroZ.push({
+				x: time.getTime(),
+				y: gyroZval
+			});
+
+			if (gyroX.length > maxDisplayPoints) {
+				gyroX.shift();
+				gyroY.shift();
+				gyroZ.shift();
+			}
+			
 			accelChart.render();
+			gyroChart.render();
 		}
 
 		setInterval(function(){updateChart(5, "accel")}, updateInterval);
-	
 	}
 
-</script>
-</head>
-
-<body>
-	<div>
-		<div id="telemetry">
-			<ul id="numericItems">
-				<li id="timeDisplay"></li>
-				<li>Altitude: </li>
-				<li id="temperatureDisplay"></li>
-				<li id="pressureDisplay"></li>
-			</ul>
-			<ul id="visualItems">
-				<li>
-					<p>Accelerometer</p>
-					<div id="accelChartContainer" style="height: 160px; width: 100%; border-radius: 5px; margin-top: 10px;"></div>
-				</li>
-				<li>
-					<p>Gyroscope</p>
-					<div></div>
-				</li>
-			</ul>
-		</div>
-	</div>
-
-	<script>
-		var ws = new WebSocket("ws://192.168.0.8:8001/");
-		ws.onmessage = function (event) {
-			var timeData = document.createTextNode(event.data).textContent.split('|')[0] + " UTC",
-				timeDisplay = document.getElementById('timeDisplay'),
-				temperatureData = document.createTextNode(event.data).textContent.split('|')[1] + " C",
-				temperatureDisplay = document.getElementById('temperatureDisplay'),
-				pressureData = document.createTextNode(event.data).textContent.split('|')[2] + " hPa",
-				pressureDisplay = document.getElementById('pressureDisplay');
-			timeDisplay.innerHTML = timeData;
-			temperatureDisplay.innerHTML = "Temperature: " + temperatureData;
-			pressureDisplay.innerHTML = "Pressure: " + pressureData;
-		};
+	var ws = new WebSocket("ws://192.168.0.8:8001/");
+	ws.onmessage = function (event) {
+		var timeData = document.createTextNode(event.data).textContent.split('|')[0] + " UTC",
+			timeDisplay = document.getElementById('timeDisplay'),
+			altitudeData = document.createTextNode(event.data).textContent.split('|')[1] + " m",
+			altitudeDisplay = document.getElementById('altitudeDisplay'),
+			temperatureData = document.createTextNode(event.data).textContent.split('|')[2] + " C",
+			temperatureDisplay = document.getElementById('temperatureDisplay'),
+			pressureData = document.createTextNode(event.data).textContent.split('|')[3] + " hPa",
+			pressureDisplay = document.getElementById('pressureDisplay'),
+			accelData = document.createTextNode(event.data).textContent.split('|')[4],
+			gyroData = document.createTextNode(event.data).textContent.split('|')[5],
+			magData = document.createTextNode(event.data).textContent.split('|')[6];
+		timeDisplay.innerHTML = timeData;
+		altitudeDisplay.innerHTML = "Altitude: " + altitudeData;
+		temperatureDisplay.innerHTML = "Temperature: " + temperatureData;
+		pressureDisplay.innerHTML = "Pressure: " + pressureData;
+		accel = accelData.split(',');
+		gyro = gyroData.split(',');
+		mag = magData.split(',');
+	};
 	</script>
 	<script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
 </body>
