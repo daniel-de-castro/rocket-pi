@@ -30,7 +30,7 @@ def record_video(camera, fd_filename):
             time.sleep(1)
     except (KeyboardInterrupt, SystemExit):
         camera.stop_recording()
-thr = threading.Thread(target = record_video, args=[camera, fd_filename])
+thr = threading.Thread(target = record_video, args=[camera, video_file])
 thr.daemon = True
 thr.start()
 

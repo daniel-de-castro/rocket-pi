@@ -37,7 +37,7 @@ PAGE="""\
 
 		#telemetry {
 			position: relative;
-			height: 380px;
+			height: 480px;
 			/*width: 285px;*/
 			padding: 4px;
 			overflow: hidden;
@@ -74,7 +74,7 @@ PAGE="""\
 			position: relative;
 			float: left;
 			width: 100%;
-			height: 50%;
+			height: 33%;
 			font-size: 12pt;
 			color: rgba(255, 255, 255, .6);
 			border-top: 1px solid gray;
@@ -104,11 +104,15 @@ PAGE="""\
 			<ul id="visualItems">
 				<li>
 					<p>Accelerometer</p>
-					<div id="accelChartContainer" style="height: 160px; width: 100%; border-radius: 5px; margin-top: 10px;"></div>
+					<div id="accelChartContainer" style="height: 110px; width: 100%; border-radius: 5px; margin-top: 10px;"></div>
 				</li>
 				<li>
 					<p>Gyroscope</p>
-					<div id="gyroChartContainer" style="height: 160px; width: 100%; border-radius: 5px; margin-top: 10px;"></div>
+					<div id="gyroChartContainer" style="height: 110px; width: 100%; border-radius: 5px; margin-top: 10px;"></div>
+				</li>
+				<li>
+					<p>Magnetometer</p>
+					<div id="magChartContainer" style="height: 110px; width: 100%; border-radius: 5px; margin-top: 10px;"></div>
 				</li>
 			</ul>
 		</div>
@@ -250,10 +254,75 @@ PAGE="""\
 			gyroChart.render();
 		}
 
+		var magX = [];
+		var magY = [];
+		var magZ = [];
+
+		var magChart = new CanvasJS.Chart("magChartContainer", {
+			zoomEnabled: true,
+			backgroundColor: "transparent",
+			axisX:{
+				labelFontColor: "transparent"
+			},
+			axisY:{
+				labelFontColor: "#bbbbbb",
+				includeZero: false
+			},
+			toolTip: {
+				shared: true
+			},
+			legend: {
+				cursor:"pointer",
+				verticalAlign: "top",
+				fontSize: 11,
+				fontColor: "#bbbbbb",
+				itemclick : toggleMagProperty
+			},
+			data: [
+				{
+					type: "line",
+					xValueType: "dateTime",
+					yValueFormatString: "####.00",
+					xValueFormatString: "",
+					showInLegend: true,
+					name: "X",
+					dataPoints: magX
+				},
+				{
+					type: "line",
+					xValueType: "dateTime",
+					yValueFormatString: "####.00",
+					showInLegend: true,
+					name: "Y" ,
+					dataPoints: magY
+				},
+				{
+					type: "line",
+					xValueType: "dateTime",
+					yValueFormatString: "####.00",
+					showInLegend: true,
+					name: "Z",
+					dataPoints: magZ
+				}
+			]
+		});
+
+		function toggleMagProperty(e) {
+			if (typeof(e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
+				e.dataSeries.visible = false;
+			}
+			else {
+				e.dataSeries.visible = true;
+			}
+		
+			magChart.render();
+		}
+
 		var maxDisplayPoints = 60; // updates every second, so will show the last minute
 		var updateInterval = 1000; // ms
 
 		// Initial values
+
 		var accelXval = 0;
 		var accelYval = 0;
 		var accelZval = 0;
@@ -262,10 +331,13 @@ PAGE="""\
 		var gyroYval = 0;
 		var gyroZval = 0;
 
-		// Start at 9:30am
+		var gyroXval = 0;
+		var gyroYval = 0;
+		var gyroZval = 0;
+
 		var time = new Date;
-		time.setHours(9);
-		time.setMinutes(30);
+		time.setHours(1);
+		time.setMinutes(00);
 		time.setSeconds(00);
 		time.setMilliseconds(00);
 
@@ -319,9 +391,33 @@ PAGE="""\
 				gyroY.shift();
 				gyroZ.shift();
 			}
+
+			magXval = parseFloat(mag[0]);
+			magYval = parseFloat(mag[1]);
+			magZval = parseFloat(mag[2]);
+
+			magX.push({
+				x: time.getTime(),
+				y: magXval
+			});
+			magY.push({
+				x: time.getTime(),
+				y: magYval
+			});
+			magZ.push({
+				x: time.getTime(),
+				y: magZval
+			});
+
+			if (magX.length > maxDisplayPoints) {
+				magX.shift();
+				magY.shift();
+				magZ.shift();
+			}
 			
 			accelChart.render();
 			gyroChart.render();
+			magChart.render();
 		}
 
 		setInterval(function(){updateChart(5, "accel")}, updateInterval);
