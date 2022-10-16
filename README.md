@@ -12,6 +12,7 @@
 
 - On an SD card, flash the latest version of RaspberryPi OS using [Raspberry Pi Imager](https://www.raspberrypi.com/software/)
 - Setup WPA on the Imager application or through adding a `wpa_supplicant.conf` file in the SD card:
+```
 country=gb
 update_config=1
 ctrl_interface=/var/run/wpa_supplicant
@@ -20,6 +21,7 @@ network={
  ssid="MyNetworkSSID"
  psk="MyNetworkPassword"
 }
+```
 - Setup a user for the Raspberry Pi through the Imager with a username and password
 - Setup SSH by adding an empty file called `ssh` in the SD card
 
