@@ -1,10 +1,36 @@
 # RocketPi
 
+## Table of Contents
+
+- [Overview](#overview)
+- [BOM](#bom)
+- [Set up the Raspberry Pi](#set-up-the-raspberry-pi)
+  - [Configure the OS](#configure-the-os)
+  - [Set up the sensors](#set-up-the-sensors)
+- [Set up a debugging environment](#set-up-a-debugging-environment)
+  - [SSH into the Raspberry Pi](#ssh-into-the-raspberry-pi)
+  - [Python Development](#python-development)
+    - [I2C](#i2c)
+    - [BMP-280](#bmp-280)
+    - [RPi Cam Interface](#rpi-cam-interface)
+
 ## Overview
 
 - **flight_data_logger.py**: reads rocket flight data and logs it to a file.
 - **rocket_server.py**: reads rocket flight data and broadcasts it.
 - **sensor_tester.py**: used to check whether the sensors are working.
+
+## BOM
+
+| Component | Description | Source | Price |
+|:---------:|:-----------:|:------:|:-----:|
+| Raspberry Pi Zero W | Version 1.3 | [Pimoroni](https://shop.pimoroni.com/products/raspberry-pi-zero-w) | £9.30 |
+| MicroSD Card | 64GB | [Amazon](https://www.amazon.co.uk/SanDisk-microSDXC-Memory-Adapter-Performance/dp/B073JYVKNX/ref=sr_1_2) | £17.49 |
+| Camera | Camera for Raspberry Pi Zero | [Pimoroni](https://shop.pimoroni.com/products/raspberry-pi-zero-camera-module) | £14.10 |
+| LiPo SHIM | Enables the RPi to be power supplied from a battery | [Pimoroni](https://shop.pimoroni.com/products/lipo-shim) | £12.60 |
+| LiPo Battery | 150mAh | [Pimoroni](https://shop.pimoroni.com/products/lipo-battery-pack) | £5.10 |
+| GY-91 | A chip combining an MPU-9250 and a BMP280 | [ebay](https://www.ebay.co.uk/itm/273021805739) | £14.95 |
+
 
 ## Set up the Raspberry Pi
 
@@ -37,15 +63,47 @@ The Raspberry Pi in the diagram below is different from the Raspberry Pi Zero W 
 
 <img width="1402" alt="image" src="https://user-images.githubusercontent.com/32271509/197072073-bcc5228b-2ce2-406d-a35d-7ada644a868c.png">
 
-## SSH into the Raspberry Pi
+## Set up a debugging environment
+
+### SSH into the Raspberry Pi
 
 With the Raspberry Pi now booted up, we can scan our network with an application such as [MobaXterm](https://mobaxterm.mobatek.net/) to find the IP address with which we can start an SSH session.
 The Raspberry Pi will prompt us to log in with a username and password, which should be the ones we set when configuring it.
 
-## Set up a debugging environment
+### Python Development
 
 Python already comes installed with the OS.
 
-TODO talk about the libraries to be imported (refer to other repo)
+#### I2C
 
-TODO i2cdetect -y 1
+In order to read from the I2C from Python, we need to install the smbus module
+```
+sudo apt-get install python-smbus
+```
+
+You can run the following command to scan an I2C bus for devices. It outputs a table with the list of detected devices on the specified bus.
+```
+i2cdetect -y 1
+```
+
+#### BMP-280
+
+This library is needed so that Python can read from the BMP280 sensor
+```
+sudo apt-get install build-essential python-pip python-dev python-smbus git
+git clone https://github.com/adafruit/Adafruit_Python_GPIO.git
+cd Adafruit_Python_GPIO
+sudo python setup.py install
+```
+
+#### RPi Cam Interface
+
+RPi Cam Web Interface is a web interface for the Raspberry Pi Camera module. It can be used for a wide variety of applications including surveillance, DVR recording and time lapse photography. We will be using it to capture images and live video from the camera. 
+
+Connect the camera with the Raspberry Pi Zero W and proceed with the instructions below.
+
+```
+git clone https://github.com/silvanmelchior/RPi_Cam_Web_Interface.git
+cd RPi_Cam_Web_Interface
+./install.sh
+```
