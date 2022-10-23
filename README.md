@@ -1,5 +1,7 @@
 # RocketPi
 
+<img width="630" alt="image" src="https://user-images.githubusercontent.com/32271509/197417106-b628fc98-9a75-4449-bd2a-07572e2f73e1.png">
+
 ## Table of Contents
 
 - [Overview](#overview)
