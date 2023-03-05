@@ -110,7 +110,7 @@ cd RPi_Cam_Web_Interface
 ./install.sh
 ```
 
-#### Sample flight recording
+## Sample flight recording
 
 https://user-images.githubusercontent.com/32271509/222975885-8085ed1b-c0ab-44f2-badf-97094f7ed585.mp4
 
